@@ -1,0 +1,1230 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AnatomiKu - Portal Pembelajaran Anatomi & Fisiologi Tubuh Manusia</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/tailwindcss-cdn@3.4.10/tailwindcss.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        medical: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            500: '#10b981',
+                            600: '#059669',
+                            700: '#047857',
+                            800: '#065f46',
+                            900: '#064e3b',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Tone.js for Sound Effects -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        @keyframes pulseSlow {
+            0%, 100% { transform: scale(1); opacity: 0.9; }
+            50% { transform: scale(1.05); opacity: 1; filter: drop-shadow(0 0 15px rgba(16, 185, 129, 0.6)); }
+        }
+        .animate-pulse-slow { animation: pulseSlow 3s infinite ease-in-out; }
+
+        @keyframes waveFlow {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-6px); }
+            100% { transform: translateY(0px); }
+        }
+        .animate-wave { animation: waveFlow 2.5s infinite ease-in-out; }
+
+        @keyframes rotateSlow {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .animate-rotate-slow { animation: rotateSlow 20s linear infinite; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased min-h-screen flex flex-col justify-between selection:bg-emerald-500 selection:text-white">
+
+    <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3 cursor-pointer group" onclick="switchTab('explore')">
+                <div class="w-10 h-10 rounded-xl bg-emerald-600 flex items-center justify-center text-white shadow-md shadow-emerald-600/20 group-hover:scale-105 transition-transform">
+                    <i data-lucide="activity" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <span class="text-xl font-extrabold bg-gradient-to-r from-emerald-700 to-teal-700 bg-clip-text text-transparent">AnatomiKu</span>
+                    <span class="hidden sm:block text-xs text-slate-500 font-medium">10 Sistem Tubuh Manusia</span>
+                </div>
+            </div>
+
+            <div class="hidden md:flex items-center relative max-w-xs w-full mx-4">
+                <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3"></i>
+                <input type="text" id="searchInput" oninput="handleSearch(this.value)" placeholder="Cari sistem atau organ..." class="w-full pl-9 pr-4 py-1.5 bg-slate-100 border border-transparent rounded-full text-sm focus:outline-none focus:bg-white focus:border-emerald-500 transition-all">
+            </div>
+
+            <div class="flex items-center space-x-1 sm:space-x-2">
+                <button onclick="switchTab('explore')" id="navExplore" class="px-3 py-2 rounded-lg text-sm font-semibold text-emerald-700 bg-emerald-50 flex items-center space-x-1 transition-colors">
+                    <i data-lucide="grid" class="w-4 h-4"></i>
+                    <span class="hidden sm:inline">10 Sistem</span>
+                </button>
+                <button onclick="switchTab('glossary')" id="navGlossary" class="px-3 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 flex items-center space-x-1 transition-colors">
+                    <i data-lucide="book" class="w-4 h-4"></i>
+                    <span class="hidden sm:inline">Glosarium</span>
+                </button>
+                <button onclick="switchTab('bookmarks')" id="navBookmarks" class="px-3 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 flex items-center space-x-1 transition-colors">
+                    <i data-lucide="bookmark" class="w-4 h-4"></i>
+                    <span class="hidden sm:inline">Tersimpan</span>
+                    <span id="bookmarkCountBadge" class="ml-1 px-1.5 py-0.5 text-xs bg-emerald-100 text-emerald-800 rounded-full font-bold">0</span>
+                </button>
+                <button onclick="switchTab('progress')" id="navProgress" class="px-3 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 flex items-center space-x-1 transition-colors">
+                    <i data-lucide="award" class="w-4 h-4"></i>
+                    <span class="hidden sm:inline">Progres</span>
+                </button>
+                <button onclick="toggleSound()" id="soundToggleBtn" class="p-2 rounded-lg text-slate-600 hover:bg-slate-100 transition-colors" title="Aktifkan/Matikan Suara">
+                    <i data-lucide="volume-2" id="soundIcon" class="w-5 h-5 text-emerald-600"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- TAB 1: EXPLORE / HOME (10 BODY SYSTEMS IN EXACT SEQUENCE) -->
+        <div id="tabExplore" class="space-y-8">
+            <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-emerald-900 via-teal-900 to-slate-900 text-white p-8 sm:p-12 shadow-xl">
+                <div class="absolute -right-10 -bottom-10 opacity-10 pointer-events-none">
+                    <i data-lucide="heart-pulse" class="w-96 h-96"></i>
+                </div>
+                <div class="relative z-10 max-w-3xl space-y-4">
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/30 text-emerald-200 border border-emerald-400/30">
+                        <i data-lucide="sparkles" class="w-3.5 h-3.5 mr-1.5"></i> Ensiklopedia Anatomi & Fisiologi Interaktif
+                    </span>
+                    <h1 class="text-3xl sm:text-5xl font-extrabold tracking-tight">10 Sistem Tubuh Manusia Lengkap</h1>
+                    <p class="text-slate-200 text-base sm:text-lg leading-relaxed font-light">
+                        Jelajahi seluruh 10 sistem tubuh sesuai urutan standar medis. Dilengkapi diagram animasi interaktif, visual organ detail, dan kuis uji pemahaman.
+                    </p>
+                    <div class="pt-2 flex flex-wrap gap-3">
+                        <button onclick="document.getElementById('systemsGrid').scrollIntoView({behavior: 'smooth'})" class="px-6 py-3 bg-white text-emerald-900 font-bold rounded-xl shadow-lg hover:bg-emerald-50 transition-all flex items-center space-x-2">
+                            <span>Mulai Eksplorasi</span>
+                            <i data-lucide="arrow-down" class="w-4 h-4"></i>
+                        </button>
+                        <div class="px-4 py-3 bg-emerald-800/60 rounded-xl border border-emerald-700/50 flex items-center space-x-3 text-sm text-emerald-100">
+                            <i data-lucide="list-ordered" class="w-5 h-5 text-emerald-300"></i>
+                            <span>1. Saraf s.d. 10. Imun</span>
+                        </div>
+                    </div>
+
+                    <!-- Bagian Tombol Quiz Google Form -->
+                    <div class="pt-4 border-t border-emerald-700/50 space-y-2">
+                        <span class="text-xs uppercase tracking-wider font-bold text-emerald-300 flex items-center space-x-1.5">
+                            <i data-lucide="help-circle" class="w-4 h-4"></i>
+                            <span>Akses Quiz Evaluasi (Google Forms):</span>
+                        </span>
+                        <div class="flex flex-wrap gap-2 pt-1">
+                            <a href="https://forms.gle/T2d2wGHyoW6q55vu5" target="_blank" rel="noopener noreferrer" class="px-3.5 py-2 bg-emerald-600/80 hover:bg-emerald-600 text-white rounded-lg text-xs font-semibold transition-all shadow-sm flex items-center space-x-1.5">
+                                <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+                                <span>Quiz Sistem Saraf</span>
+                            </a>
+                            <a href="https://forms.gle/d91Axyngbxc4apCN9" target="_blank" rel="noopener noreferrer" class="px-3.5 py-2 bg-emerald-600/80 hover:bg-emerald-600 text-white rounded-lg text-xs font-semibold transition-all shadow-sm flex items-center space-x-1.5">
+                                <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+                                <span>Quiz Endokrin & Reproduksi</span>
+                            </a>
+                            <a href="https://forms.gle/jmBHNxpuFZD1ye7dA" target="_blank" rel="noopener noreferrer" class="px-3.5 py-2 bg-emerald-600/80 hover:bg-emerald-600 text-white rounded-lg text-xs font-semibold transition-all shadow-sm flex items-center space-x-1.5">
+                                <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+                                <span>Quiz Muskuloskeletal & Integumen</span>
+                            </a>
+                            <a href="https://forms.gle/STSUDDSATyzAHA2W7" target="_blank" rel="noopener noreferrer" class="px-3.5 py-2 bg-emerald-600/80 hover:bg-emerald-600 text-white rounded-lg text-xs font-semibold transition-all shadow-sm flex items-center space-x-1.5">
+                                <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+                                <span>Quiz Kardiovaskular & Respirasi</span>
+                            </a>
+                            <a href="https://forms.gle/moBUgAaQf31DAHWT8" target="_blank" rel="noopener noreferrer" class="px-3.5 py-2 bg-emerald-600/80 hover:bg-emerald-600 text-white rounded-lg text-xs font-semibold transition-all shadow-sm flex items-center space-x-1.5">
+                                <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+                                <span>Quiz Imun & Hematologi</span>
+                            </a>
+                            <a href="https://forms.gle/w26sK4K1BBRwxFxy9" target="_blank" rel="noopener noreferrer" class="px-3.5 py-2 bg-emerald-600/80 hover:bg-emerald-600 text-white rounded-lg text-xs font-semibold transition-all shadow-sm flex items-center space-x-1.5">
+                                <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+                                <span>Quiz Pencernaan, Perkemihan & Asam Basa</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-2xl font-extrabold text-slate-900">Urutan 10 Sistem Tubuh Utama</h2>
+                    <p class="text-sm text-slate-500">Klik sistem untuk membuka materi lengkap, diagram animasi organ, dan kuis.</p>
+                </div>
+                <div class="w-full sm:w-auto md:hidden">
+                    <input type="text" oninput="handleSearch(this.value)" placeholder="Cari sistem..." class="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500 shadow-sm">
+                </div>
+            </div>
+
+            <div id="systemsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Injected via JavaScript -->
+            </div>
+        </div>
+
+        <!-- TAB 2: GLOSSARY -->
+        <div id="tabGlossary" class="hidden space-y-6 max-w-4xl mx-auto">
+            <div class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200 space-y-6">
+                <div>
+                    <span class="text-xs font-semibold uppercase tracking-wider text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full">Kamus Istilah</span>
+                    <h2 class="text-2xl font-bold text-slate-900 mt-2">Glosarium Anatomi & Fisiologi</h2>
+                    <p class="text-sm text-slate-500">Daftar istilah kedokteran dari seluruh 10 sistem tubuh manusia.</p>
+                </div>
+
+                <div class="relative">
+                    <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5"></i>
+                    <input type="text" id="glossarySearch" oninput="handleGlossarySearch(this.value)" placeholder="Cari istilah medis..." class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:bg-white focus:border-emerald-500 transition-all">
+                </div>
+
+                <div class="grid grid-cols-1 gap-3 max-h-[60vh] overflow-y-auto custom-scrollbar pr-2" id="glossaryListContainer">
+                    <!-- Injected via JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: BOOKMARKS -->
+        <div id="tabBookmarks" class="hidden space-y-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-200 pb-4 gap-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-900">Materi Tersimpan</h2>
+                    <p class="text-sm text-slate-500">Daftar sistem tubuh yang telah Anda bookmark.</p>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <a href="https://drive.google.com/drive/u/1/folders/1z4i0O3ICldno8xiSGebIH1WkK6BL9rAd" target="_blank" rel="noopener noreferrer" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-semibold shadow-sm transition-all flex items-center space-x-2">
+                        <i data-lucide="folder-open" class="w-4 h-4"></i>
+                        <span>Buka Folder Google Drive Materi</span>
+                    </a>
+                    <button onclick="switchTab('explore')" class="text-sm text-emerald-600 hover:text-emerald-700 font-semibold flex items-center space-x-1">
+                        <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                        <span>Kembali ke Beranda</span>
+                    </button>
+                </div>
+            </div>
+            <div id="bookmarksContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Injected via JavaScript -->
+            </div>
+        </div>
+
+        <!-- TAB 4: PROGRESS -->
+        <div id="tabProgress" class="hidden space-y-6 max-w-4xl mx-auto">
+            <div class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200 space-y-6">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                        <span class="text-xs font-semibold uppercase tracking-wider text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full">Statistik Belajar</span>
+                        <h2 class="text-2xl font-bold text-slate-900 mt-2">Progres & Pencapaian Kuis</h2>
+                        <p class="text-sm text-slate-500">Pantau sejauh mana penguasaan materi 10 sistem tubuh Anda.</p>
+                    </div>
+                    <div class="bg-emerald-50 border border-emerald-100 rounded-2xl p-4 flex items-center space-x-4">
+                        <div class="w-12 h-12 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold text-lg shadow-md">
+                            <span id="overallScorePercent">0%</span>
+                        </div>
+                        <div>
+                            <span class="text-xs text-emerald-700 font-medium">Total Kuis Selesai</span>
+                            <p class="text-sm font-bold text-slate-900" id="totalQuizCompleted">0 dari 10 Sistem</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-4 pt-4 border-t border-slate-100" id="progressListContainer">
+                    <!-- Injected via JavaScript -->
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <div id="systemModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-hidden shadow-2xl flex flex-col transform transition-all">
+            <div id="modalHeaderBg" class="p-6 sm:p-8 text-white relative flex items-start justify-between">
+                <div class="absolute -right-6 -bottom-6 opacity-10">
+                    <i id="modalHeaderWatermark" data-lucide="activity" class="w-48 h-48"></i>
+                </div>
+                <div class="relative z-10 space-y-2">
+                    <div class="flex items-center space-x-2">
+                        <span id="modalCategoryBadge" class="px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-xs font-semibold uppercase tracking-wider">Sistem Tubuh</span>
+                        <button onclick="toggleBookmarkCurrent()" id="modalBookmarkBtn" class="p-1.5 rounded-full bg-white/20 backdrop-blur-md hover:bg-white/30 transition-colors text-white">
+                            <i data-lucide="bookmark" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                    <h2 id="modalTitle" class="text-2xl sm:text-4xl font-extrabold">Nama Sistem</h2>
+                    <p id="modalSubtitle" class="text-slate-100 text-sm sm:text-base max-w-xl font-light">Deskripsi singkat sistem tubuh.</p>
+                </div>
+                <button onclick="closeModal()" class="relative z-10 p-2 rounded-full bg-black/20 hover:bg-black/30 text-white transition-colors">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+
+            <div class="bg-slate-50 border-b border-slate-200 px-6 flex space-x-6 overflow-x-auto">
+                <button onclick="switchModalTab('overview')" id="tabBtnOverview" class="py-3.5 font-semibold text-sm border-b-2 border-emerald-600 text-emerald-700 flex items-center space-x-2 transition-colors whitespace-nowrap">
+                    <i data-lucide="info" class="w-4 h-4"></i>
+                    <span>Ringkasan & Fisiologi</span>
+                </button>
+                <button onclick="switchModalTab('visual')" id="tabBtnVisual" class="py-3.5 font-semibold text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center space-x-2 transition-colors whitespace-nowrap">
+                    <i data-lucide="eye" class="w-4 h-4"></i>
+                    <span>Diagram Animasi Organ</span>
+                </button>
+                <button onclick="switchModalTab('organs')" id="tabBtnOrgans" class="py-3.5 font-semibold text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center space-x-2 transition-colors whitespace-nowrap">
+                    <i data-lucide="layers" class="w-4 h-4"></i>
+                    <span>Struktur Organ</span>
+                </button>
+                <button onclick="switchModalTab('quiz')" id="tabBtnQuiz" class="py-3.5 font-semibold text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center space-x-2 transition-colors whitespace-nowrap">
+                    <i data-lucide="help-circle" class="w-4 h-4"></i>
+                    <span>Kuis Pemahaman</span>
+                </button>
+            </div>
+
+            <div class="p-6 sm:p-8 overflow-y-auto custom-scrollbar flex-grow space-y-6 max-h-[50vh]" id="modalBodyContent">
+                <!-- Dynamically filled -->
+            </div>
+
+            <div class="bg-slate-50 border-t border-slate-200 px-6 py-4 flex items-center justify-between">
+                <span class="text-xs text-slate-500 font-medium" id="modalFooterInfo">Anatomi & Fisiologi Manusia</span>
+                <button onclick="closeModal()" class="px-5 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl font-semibold text-sm transition-colors">
+                    Tutup
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-white border-t border-slate-200 mt-16 py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
+            <div class="flex items-center space-x-3">
+                <div class="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center text-white">
+                    <i data-lucide="activity" class="w-4 h-4"></i>
+                </div>
+                <span class="font-bold text-slate-800">AnatomiKu Edukasi</span>
+            </div>
+            <p class="text-sm text-slate-500">
+                Media pembelajaran interaktif 10 sistem anatomi dan fisiologi tubuh manusia.
+            </p>
+            <div class="text-xs text-slate-400">
+                &copy; 2026 AnatomiKu. All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Audio Synthesizer setup using Tone.js
+        let soundEnabled = true;
+        const synth = new Tone.Synth().toDestination();
+
+        function playSound(type = 'click') {
+            if (!soundEnabled) return;
+            try {
+                if (type === 'click') {
+                    synth.triggerAttackRelease("C5", "32n");
+                } else if (type === 'success') {
+                    synth.triggerAttackRelease("G5", "16n");
+                } else if (type === 'error') {
+                    synth.triggerAttackRelease("C3", "16n");
+                }
+            } catch (e) {}
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            const icon = document.getElementById('soundIcon');
+            icon.setAttribute('data-lucide', soundEnabled ? 'volume-2' : 'volume-x');
+            lucide.createIcons();
+            playSound('click');
+        }
+
+        // 10 Body Systems Database strictly in requested sequence with YouTube links & detailed simulation data:
+        const bodySystems = [
+            {
+                id: "nervous",
+                number: "01",
+                name: "Sistem Persarafan",
+                icon: "cpu",
+                color: "from-amber-500 to-orange-600",
+                badgeBg: "bg-amber-50 text-amber-700 border-amber-200",
+                tagline: "Mengatur, mengoordinasikan, dan merespons seluruh aktivitas tubuh serta rangsangan eksternal maupun internal.",
+                physiology: "Sistem persarafan terdiri dari Sistem Saraf Pusat (otak dan sumsum tulang belakang) serta Sistem Saraf Tepi. Impuls saraf dihantarkan melalui sel neuron menggunakan potensial aksi elektrik dan pelepasan neurotransmiter di celah sinapsis.",
+                funFact: "Otak manusia menghasilkan energi listrik sekitar 20 watt saat terjaga—cukup untuk menyalakan bola lampu kecil!",
+                organs: [
+                    { name: "Otak (Brain)", desc: "Pusat kesadaran, kognisi, memori, dan kendali motorik sadar." },
+                    { name: "Sumsum Tulang Belakang", desc: "Jalur transmisi utama ke tubuh dan pusat refleks cepat." },
+                    { name: "Saraf Tepi (Perifer)", desc: "Menghubungkan sistem saraf pusat dengan seluruh organ sensorik dan otot." },
+                    { name: "Neuron (Sel Saraf)", desc: "Unit struktural penghantar impuls listrik melalui akson dan dendrit." }
+                ],
+                visualType: "nervous",
+                simTitle: "Simulasi Potensial Aksi Akson & Sinapsis",
+                simDesc: "Menampilkan perambatan impuls listrik (depolarisasi) sepanjang membran akson saraf serta pelepasan vesikel neurotransmiter di celah sinapsis.",
+                youtubeUrl: "https://www.youtube.com/watch?v=80InfnISK_U",
+                quiz: {
+                    question: "Bagian utama sistem saraf pusat yang bertindak sebagai pusat kendali sadar, berpikir, dan memori adalah...",
+                    options: ["Sumsum Tulang Belakang", "Otak", "Saraf Tepi", "Neuron"],
+                    correct: 1,
+                    explanation: "Otak adalah pusat kendali utama bagi seluruh aktivitas kognitif, motorik sadar, dan sensorik tubuh."
+                }
+            },
+            {
+                id: "endocrine",
+                number: "02",
+                name: "Sistem Endokrin",
+                icon: "zap",
+                color: "from-pink-500 to-rose-600",
+                badgeBg: "bg-pink-50 text-pink-700 border-pink-200",
+                tagline: "Mengatur metabolisme, pertumbuhan, reproduksi, dan homeostasis melalui pelepasan hormon ke darah.",
+                physiology: "Kelenjar endokrin memproduksi hormon sebagai pembawa pesan kimiawi yang disekresikan langsung ke kapiler darah untuk mengatur fungsi organ dalam jangka panjang.",
+                funFact: "Kelenjar pituitari disebut 'master gland' karena mengontrol sekresi sebagian besar kelenjar endokrin lainnya.",
+                organs: [
+                    { name: "Kelenjar Pituitari", desc: "Master gland pengatur kelenjar hormon utama tubuh." },
+                    { name: "Kelenjar Tiroid", desc: "Mengatur kecepatan metabolisme energi dan laju seluler." },
+                    { name: "Pankreas", desc: "Menghasilkan insulin dan glukagon untuk pengatur kadar gula darah." },
+                    { name: "Kelenjar Adrenal", desc: "Menghasilkan hormon adrenalin untuk respons stres dan darurat." }
+                ],
+                visualType: "endocrine",
+                simTitle: "Simulasi Pelepasan Hormon & Umpan Balik Kelenjar Pituitari, Tiroid, Adrenal, Pankreas",
+                simDesc: "Menampilkan mekanisme sekresi hormon dan sistem umpan balik negatif/positif dari kelenjar endokrin utama tubuh.",
+                youtubeUrl: "https://www.youtube.com/watch?v=igbxHDp14ps",
+                quiz: {
+                    question: "Kelenjar endokrin manakah yang menghasilkan hormon insulin untuk mengatur kadar glukosa darah?",
+                    options: ["Tiroid", "Adrenal", "Pankreas", "Pituitari"],
+                    correct: 2,
+                    explanation: "Pankreas menghasilkan insulin dan glukagon yang berperan vital dalam metabolisme karbohidrat dan gula darah."
+                }
+            },
+            {
+                id: "reproductive",
+                number: "03",
+                name: "Sistem Reproduksi",
+                icon: "heart-handshake",
+                color: "from-pink-600 to-purple-700",
+                badgeBg: "bg-pink-50 text-pink-700 border-pink-200",
+                tagline: "Memproduksi sel kelamin (gamet) dan hormon reproduksi untuk kelangsungan keturunan spesies manusia.",
+                physiology: "Terdiri dari organ reproduksi pria dan wanita. Memfasilitasi pembentukan gamet (sperma dan ovum), fertilisasi, serta mendukung gestasi dan tumbuh kembang janin di dalam uterus.",
+                funFact: "Sel telur (ovum) wanita adalah sel terbesar dalam tubuh manusia yang dapat dilihat tanpa mikroskop.",
+                organs: [
+                    { name: "Testis & Ovarium (Gonad)", desc: "Organ penghasil sel kelamin dan hormon seks (testosteron/estrogen)." },
+                    { name: "Uterus (Rahim)", desc: "Tempat implantasi dan tumbuh kembangnya janin selama kehamilan." },
+                    { name: "Saluran Reproduksi", desc: "Vas deferens atau tuba falopi sebagai jalur transportasi gamet." },
+                    { name: "Plasenta", desc: "Organ pertukaran nutrisi dan oksigen antara ibu dan janin." }
+                ],
+                visualType: "reproductive",
+                simTitle: "Simulasi Siklus Menstruasi & Spermatogenesis",
+                simDesc: "Menampilkan tahapan pembentukan sel kelamin dan dinamika perubahan hormonal pada siklus reproduksi.",
+                youtubeUrl: "https://www.youtube.com/watch?v=1f9xYqe3KnE",
+                quiz: {
+                    question: "Organ reproduksi wanita yang berfungsi sebagai tempat tumbuh kembangnya embrio dan janin adalah...",
+                    options: ["Ovarium", "Tuba Falopi", "Uterus (Rahim)", "Vagina"],
+                    correct: 2,
+                    explanation: "Uterus atau rahim adalah organ berotot tempat embrio berimplantasi dan berkembang selama kehamilan."
+                }
+            },
+            {
+                id: "musculoskeletal",
+                number: "04",
+                name: "Sistem Muskuloskeletal",
+                icon: "shield",
+                color: "from-slate-700 to-slate-900",
+                badgeBg: "bg-slate-100 text-slate-700 border-slate-300",
+                tagline: "Gabungan sistem rangka dan otot yang memberikan struktur, bentuk, perlindungan organ, dan pergerakan.",
+                physiology: "Terdiri dari kerangka tulang (206 tulang pada orang dewasa) yang dilindungi sendi dan kartilago, serta otot rangka yang berkontraksi untuk menggerakkan rangka tubuh.",
+                funFact: "Bayi lahir dengan sekitar 270 tulang yang perlahan menyatu saat dewasa, dan otot tersibuk adalah otot bola mata!",
+                organs: [
+                    { name: "Tulang Rangka", desc: "Kerangka penopang tubuh, pelindung organ vital, dan tempat sumsum." },
+                    { name: "Otot Rangka", desc: "Otot lurik sadar yang berkontraksi menarik tulang untuk bergerak." },
+                    { name: "Sendi & Ligamen", desc: "Penghubung antar tulang yang memberikan fleksibilitas sendi." },
+                    { name: "Tendon", desc: "Jaringan ikat kuat yang melekatkan jaringan otot pada tulang." }
+                ],
+                visualType: "musculoskeletal",
+                simTitle: "Simulasi Kontraksi Serat Otot Aktin-Miosin & Struktur Tulang",
+                simDesc: "Menampilkan mekanisme pergeseran filamen protein pada kontraksi otot serta sokongan struktural sistem rangka.",
+                youtubeUrl: "https://www.youtube.com/watch?v=G2pCx9sXlSI",
+                quiz: {
+                    question: "Bagian manakah yang berfungsi menghubungkan jaringan otot rangka ke tulang dalam sistem muskuloskeletal?",
+                    options: ["Ligamen", "Tendon", "Kartilago", "Sendi Peluru"],
+                    correct: 1,
+                    explanation: "Tendon adalah jaringan ikat fibrosa kuat yang berfungsi melekatkan otot ke tulang sehingga gaya kontraksi otot dapat menggerakkan rangka."
+                }
+            },
+            {
+                id: "respiratory",
+                number: "05",
+                name: "Sistem Respirasi",
+                icon: "wind",
+                color: "from-cyan-500 to-blue-600",
+                badgeBg: "bg-cyan-50 text-cyan-700 border-cyan-200",
+                tagline: "Memfasilitasi pertukaran gas oksigen (O2) dan karbon dioksida (CO2) untuk mendukung respirasi seluler.",
+                physiology: "Udara dihirup melalui saluran napas atas menuju paru-paru. Di dalam alveoli, oksigen berdifusi ke kapiler darah, dan karbon dioksida dikeluarkan saat mengembuskan napas.",
+                funFact: "Luas permukaan total seluruh alveoli di dalam paru-paru manusia dewasa setara dengan luas lapangan tenis!",
+                organs: [
+                    { name: "Rongga Hidung", desc: "Menyaring, melembapkan, dan menghangatkan udara pernapasan." },
+                    { name: "Trakea", desc: "Pipa saluran udara utama menuju bronkus paru-paru." },
+                    { name: "Paru-paru & Alveoli", desc: "Organ utama tempat pertukaran gas oksigen dan karbon dioksida." },
+                    { name: "Diafragma", desc: "Otot utama pengatur tekanan rongga dada saat bernapas." }
+                ],
+                visualType: "respiratory",
+                simTitle: "Simulasi Mekanisme Ventilasi Paru & Pertukaran Gas Alveolus",
+                simDesc: "Menampilkan proses pernapasan dada/perut serta difusi oksigen dan karbon dioksida di dalam alveolus paru-paru.",
+                youtubeUrl: "https://www.youtube.com/watch?v=AkkxZCPid6s",
+                quiz: {
+                    question: "Di bagian manakah pertukaran gas oksigen dan karbon dioksida terjadi secara langsung dalam paru-paru?",
+                    options: ["Trakea", "Bronkus", "Alveoli", "Laring"],
+                    correct: 2,
+                    explanation: "Alveoli adalah kantong udara mikroskopis tempat difusi gas oksigen ke darah dan pelepasan karbon dioksida berlangsung."
+                }
+            },
+            {
+                id: "cardiovascular",
+                number: "06",
+                name: "Sistem Kardiovaskuler",
+                icon: "heart",
+                color: "from-rose-500 to-red-600",
+                badgeBg: "bg-rose-50 text-rose-700 border-rose-200",
+                tagline: "Pusat transportasi darah yang mengalirkan oksigen, nutrisi, hormon, dan membuang sisa metabolisme.",
+                physiology: "Jantung memompa darah beroksigen melalui arteri ke seluruh tubuh, dan mengembalikan darah deoksigen melalui vena dan kapiler kembali ke paru-paru.",
+                funFact: "Dalam satu hari, jantung manusia berdetak sekitar 100.000 kali dan memompa lebih dari 7.000 liter darah.",
+                organs: [
+                    { name: "Jantung", desc: "Organ berotot 4 ruang sebagai pompa utama sirkulasi darah." },
+                    { name: "Arteri (Pembuluh Nadi)", desc: "Membawa darah kaya oksigen keluar dari jantung ke seluruh tubuh." },
+                    { name: "Vena (Pembuluh Balik)", desc: "Mengembalikan darah dari jaringan tubuh kembali menuju jantung." },
+                    { name: "Kapiler", desc: "Pembuluh mikro tempat pertukaran zat nutrisi dan gas dengan sel." }
+                ],
+                visualType: "cardiovascular",
+                simTitle: "Simulasi Siklus Jantung Sistar-Diastol & Aliran Darah 4 Ruang",
+                simDesc: "Menampilkan kerja pompa jantung, katup kardiak, serta jalur sirkulasi darah bersih dan kotor pada keempat ruang jantung.",
+                youtubeUrl: "https://www.youtube.com/watch?v=W4AAkINZPHo",
+                quiz: {
+                    question: "Pembuluh darah manakah yang membawa darah KELUAR dari jantung menuju ke seluruh tubuh?",
+                    options: ["Vena Kava", "Arteri (Pembuluh Nadi)", "Kapiler", "Vena Pulmonalis"],
+                    correct: 1,
+                    explanation: "Arteri bertugas mengalirkan darah kaya oksigen keluar dari bilik jantung ke seluruh jaringan tubuh."
+                }
+            },
+            {
+                id: "digestive",
+                number: "07",
+                name: "Sistem Pencernaan",
+                icon: "utensils",
+                color: "from-emerald-500 to-green-600",
+                badgeBg: "bg-emerald-50 text-emerald-700 border-emerald-200",
+                tagline: "Menguraikan makanan secara mekanik dan kimiawi menjadi nutrisi siap serap dan mengeliminasi sisa.",
+                physiology: "Makanan dicerna melalui gerakan peristaltik dan enzim pencernaan. Nutrisi diserap di usus halus masuk ke aliran darah, dan sisa ampas diproses di usus besar.",
+                funFact: "Saluran pencernaan manusia dari mulut hingga anus memiliki panjang total mencapai sekitar 9 meter.",
+                organs: [
+                    { name: "Mulut & Gigi", desc: "Tempat awal pencernaan mekanik dan enzimatik makanan." },
+                    { name: "Lambung", desc: "Ruang pencernaan asam lambung dan enzim pencerna protein." },
+                    { name: "Usus Halus", desc: "Pusat utama penyerapan sari-sari nutrisi ke aliran darah." },
+                    { name: "Usus Besar & Hati", desc: "Penyerapan air, pembentukan feses, serta sekresi empedu." }
+                ],
+                visualType: "digestive",
+                simTitle: "Simulasi Peristaltik Saluran Cerna & Enzim Pencernaan",
+                simDesc: "Menampilkan gerakan mendorong makanan oleh otot saluran pencernaan serta proses enzimatis pemecahan nutrisi.",
+                youtubeUrl: "https://www.youtube.com/watch?v=j1VCIBfcfUM",
+                quiz: {
+                    question: "Organ utama manakah yang menjadi pusat penyerapan sebagian besar sari-sari nutrisi makanan?",
+                    options: ["Lambung", "Usus Halus", "Usus Besar", "Esofagus"],
+                    correct: 1,
+                    explanation: "Usus halus dilengkapi struktur vili dan mikrovili yang memaksimalkan penyerapan nutrisi ke dalam aliran darah."
+                }
+            },
+            {
+                id: "urinary",
+                number: "08",
+                name: "Sistem Perkemihan",
+                icon: "droplet",
+                color: "from-blue-500 to-indigo-600",
+                badgeBg: "bg-blue-50 text-blue-700 border-blue-200",
+                tagline: "Menyaring darah, membuang limbah metabolik nitrogen, serta menjaga keseimbangan cairan dan elektrolit.",
+                physiology: "Ginjal menyaring darah melalui jutaan nefron untuk membentuk urine. Urine dialirkan melalui ureter ke kandung kemih dan dikeluarkan melalui uretra.",
+                funFact: "Kedua ginjal manusia menyaring sekitar 180 liter darah setiap harinya untuk membersihkan racun tubuh.",
+                organs: [
+                    { name: "Ginjal", desc: "Organ penyaring utama darah dan pembentuk cairan urine." },
+                    { name: "Ureter", desc: "Saluran pengalir urine dari ginjal menuju kandung kemih." },
+                    { name: "Kandung Kemih", desc: "Kantong elastis penampung sementara urine." },
+                    { name: "Uretra", desc: "Saluran pengeluar urine dari kandung kemih keluar tubuh." }
+                ],
+                visualType: "urinary",
+                simTitle: "Simulasi Filtrasi Glomerulus & Pembentukan Urin di Nefron",
+                simDesc: "Menampilkan proses penyaringan darah, reabsorpsi, dan augmentasi zat sisa metabolisme di dalam struktur nefron ginjal.",
+                youtubeUrl: "https://www.youtube.com/watch?v=i6vUAcoIItA&list=PLwy2Gb0jKO58TNtqZVgErJsVtkynI8TEl&index=6",
+                quiz: {
+                    question: "Unit fungsional penyaring darah mikroskopis yang terdapat di dalam ginjal disebut...",
+                    options: ["Nefron", "Neuron", "Alveoli", "Vili"],
+                    correct: 0,
+                    explanation: "Nefron adalah unit penyaring terkecil di ginjal tempat filtrasi darah dan pembentukan urine berlangsung."
+                }
+            },
+            {
+                id: "integumentary",
+                number: "09",
+                name: "Sistem Integumen",
+                icon: "shield-alert",
+                color: "from-amber-600 to-yellow-600",
+                badgeBg: "bg-amber-50 text-amber-800 border-amber-200",
+                tagline: "Pelindung terluar tubuh dari patogen, sinar UV, dehidrasi, serta pengatur suhu tubuh.",
+                physiology: "Terdiri dari kulit, rambut, kuku, dan kelenjar keringat. Kulit memiliki lapisan epidermis, dermis, dan hipodermis sebagai pertahanan fisik sekaligus indra peraba.",
+                funFact: "Kulit adalah organ terbesar manusia dengan total luas mencapai sekitar 2 meter persegi pada orang dewasa.",
+                organs: [
+                    { name: "Epidermis", desc: "Lapisan pelindung terluar kulit yang kedap air dan kuman." },
+                    { name: "Dermis", desc: "Lapisan tengah yang mengandung folikel rambut, saraf, dan pembuluh." },
+                    { name: "Hipodermis (Subkutan)", desc: "Lapisan jaringan lemak penyimpan cadangan energi." },
+                    { name: "Kelenjar Keringat", desc: "Alat ekskresi dan pengatur suhu internal tubuh." }
+                ],
+                visualType: "integumentary",
+                simTitle: "Simulasi Lapisan Kulit Epidermis, Dermis, dan Hipodermis",
+                simDesc: "Menampilkan struktur anatomi dan fungsi perlindungan serta sensorik dari berbagai lapisan jaringan kulit.",
+                youtubeUrl: "https://www.youtube.com/watch?v=GApVlz67pGQ",
+                quiz: {
+                    question: "Lapisan kulit terluar yang menjadi pertahanan fisik pertama terhadap kuman dan dehidrasi adalah...",
+                    options: ["Epidermis", "Dermis", "Hipodermis", "Subkutan"],
+                    correct: 0,
+                    explanation: "Epidermis adalah lapisan terluar kulit yang tersusun dari sel-sel keratin pelindung."
+                }
+            },
+            {
+                id: "immune",
+                number: "10",
+                name: "Sistem Imun",
+                icon: "shield-check",
+                color: "from-violet-500 to-purple-600",
+                badgeBg: "bg-violet-50 text-violet-700 border-violet-200",
+                tagline: "Sistem pertahanan biologis tubuh terhadap infeksi patogen, virus, bakteri, dan sel abnormal.",
+                physiology: "Melibatkan sel darah putih (leukosit), antibodi, kelenjar getah bening, limpa, dan timus yang mendeteksi benda asing (antigen) dan menghancurkannya.",
+                funFact: "Kelenjar timus memiliki ukuran paling besar pada masa anak-anak dan berangsur menyusut seiring bertambahnya usia.",
+                organs: [
+                    { name: "Kelenjar Getah Bening", desc: "Titik filter cairan limfa dan markas proliferasi sel imun." },
+                    { name: "Limpa", desc: "Penyaring darah dan penghancur sel darah merah yang rusak." },
+                    { name: "Sumsum Tulang & Timus", desc: "Tempat produksi dan pematangan sel darah putih." },
+                    { name: "Tonsil (Amandel)", desc: "Pertahanan imun awal pada pintu masuk saluran napas." }
+                ],
+                visualType: "immune",
+                simTitle: "Simulasi Respon Imun Bawaan & Adaptif / Fagositosis Sel Makrofag",
+                simDesc: "Menampilkan mekanisme pertahanan tubuh melawan patogen melalui fagositosis sel makrofag serta aktivasi kekebalan adaptif.",
+                youtubeUrl: "#",
+                quiz: {
+                    question: "Sel darah putih jenis apa yang memproduksi antibodi spesifik untuk melawan infeksi patogen?",
+                    options: ["Eritrosit", "Trombosit", "Limfosit (Sel B & T)", "Hemoglobin"],
+                    correct: 2,
+                    explanation: "Limfosit (sel B dan T) berperan sangat krusial dalam kekebalan adaptif dan memproduksi antibodi pelindung."
+                }
+            }
+        ];
+
+        // Medical Glossary Database
+        const glossaryData = [
+            { term: "Alveoli", category: "Sistem Respirasi", desc: "Kantong udara mikroskopis di paru-paru tempat pertukaran oksigen dan karbon dioksida." },
+            { term: "Arteri", category: "Sistem Kardiovaskuler", desc: "Pembuluh darah berotot yang membawa darah kaya oksigen keluar dari jantung." },
+            { term: "Diafragma", category: "Sistem Respirasi", desc: "Otot berbentuk kubah di bawah paru-paru yang mengatur mekanika pernapasan." },
+            { term: "Epidermis", category: "Sistem Integumen", desc: "Lapisan terluar kulit yang berfungsi sebagai pelindung fisik utama." },
+            { term: "Homeostasis", category: "Fisiologi Umum", desc: "Kondisi keseimbangan dinamis lingkungan internal tubuh yang stabil." },
+            { term: "Hormon", category: "Sistem Endokrin", desc: "Zat kimia pembawa pesan yang dilepaskan oleh kelenjar endokrin ke dalam darah." },
+            { term: "Insulin", category: "Sistem Endokrin", desc: "Hormon yang diproduksi pankreas untuk menurunkan kadar glukosa dalam darah." },
+            { term: "Limfosit", category: "Sistem Imun", desc: "Jenis sel darah putih utama yang bertanggung jawab atas kekebalan adaptif." },
+            { term: "Nefron", category: "Sistem Perkemihan", desc: "Unit struktural dan fungsional terkecil penyaring darah di dalam ginjal." },
+            { term: "Neuron", category: "Sistem Persarafan", desc: "Sel saraf utama yang menghantarkan impuls listrik ke seluruh tubuh." },
+            { term: "Peristaltik", category: "Sistem Pencernaan", desc: "Gerakan otot bergelombang pada saluran pencernaan untuk mendorong makanan." },
+            { term: "Tendon", category: "Sistem Muskuloskeletal", desc: "Jaringan ikat fibrosa kuat yang menghubungkan otot ke tulang." },
+            { term: "Uterus", category: "Sistem Reproduksi", desc: "Organ reproduksi wanita berotot tempat janin tumbuh dan berkembang." },
+            { term: "Vena", category: "Sistem Kardiovaskuler", desc: "Pembuluh darah yang mengembalikan darah dari jaringan tubuh kembali ke jantung." }
+        ];
+
+        let bookmarks = JSON.parse(localStorage.getItem('anatomiku_bookmarks_v2')) || [];
+        let quizScores = JSON.parse(localStorage.getItem('anatomiku_quizScores_v2')) || {};
+        let currentActiveSystem = null;
+        let currentModalTab = 'overview';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderSystems(bodySystems);
+            renderGlossary(glossaryData);
+            updateBookmarkBadge();
+            lucide.createIcons();
+        });
+
+        function switchTab(tabId) {
+            playSound('click');
+            document.getElementById('tabExplore').classList.add('hidden');
+            document.getElementById('tabGlossary').classList.add('hidden');
+            document.getElementById('tabBookmarks').classList.add('hidden');
+            document.getElementById('tabProgress').classList.add('hidden');
+
+            document.getElementById('navExplore').className = "px-3 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 flex items-center space-x-1 transition-colors";
+            document.getElementById('navGlossary').className = "px-3 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 flex items-center space-x-1 transition-colors";
+            document.getElementById('navBookmarks').className = "px-3 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 flex items-center space-x-1 transition-colors";
+            document.getElementById('navProgress').className = "px-3 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 flex items-center space-x-1 transition-colors";
+
+            if (tabId === 'explore') {
+                document.getElementById('tabExplore').classList.remove('hidden');
+                document.getElementById('navExplore').className = "px-3 py-2 rounded-lg text-sm font-semibold text-emerald-700 bg-emerald-50 flex items-center space-x-1 transition-colors";
+                renderSystems(bodySystems);
+            } else if (tabId === 'glossary') {
+                document.getElementById('tabGlossary').classList.remove('hidden');
+                document.getElementById('navGlossary').className = "px-3 py-2 rounded-lg text-sm font-semibold text-emerald-700 bg-emerald-50 flex items-center space-x-1 transition-colors";
+                renderGlossary(glossaryData);
+            } else if (tabId === 'bookmarks') {
+                document.getElementById('tabBookmarks').classList.remove('hidden');
+                document.getElementById('navBookmarks').className = "px-3 py-2 rounded-lg text-sm font-semibold text-emerald-700 bg-emerald-50 flex items-center space-x-1 transition-colors";
+                renderBookmarks();
+            } else if (tabId === 'progress') {
+                document.getElementById('tabProgress').classList.remove('hidden');
+                document.getElementById('navProgress').className = "px-3 py-2 rounded-lg text-sm font-semibold text-emerald-700 bg-emerald-50 flex items-center space-x-1 transition-colors";
+                renderProgress();
+            }
+            lucide.createIcons();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function renderSystems(systemsToRender) {
+            const grid = document.getElementById('systemsGrid');
+            if (systemsToRender.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full py-12 text-center text-slate-400">
+                        <i data-lucide="search-x" class="w-12 h-12 mx-auto mb-3 opacity-50"></i>
+                        <p class="text-base font-medium">Sistem tubuh tidak ditemukan.</p>
+                    </div>
+                `;
+                lucide.createIcons();
+                return;
+            }
+
+            grid.innerHTML = systemsToRender.map(sys => {
+                const isBookmarked = bookmarks.includes(sys.id);
+                const hasCompletedQuiz = quizScores[sys.id] !== undefined;
+
+                return `
+                    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col justify-between group">
+                        <div class="p-6 space-y-4">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-3">
+                                    <span class="text-xs font-extrabold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-100">${sys.number}</span>
+                                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br ${sys.color} text-white flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                                        <i data-lucide="${sys.icon}" class="w-5 h-5"></i>
+                                    </div>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    ${hasCompletedQuiz ? '<span class="px-2 py-1 bg-emerald-50 text-emerald-700 text-xs font-bold rounded-md flex items-center"><i data-lucide="check-circle-2" class="w-3.5 h-3.5 mr-1"></i>Selesai</span>' : ''}
+                                    <button onclick="event.stopPropagation(); toggleBookmark('${sys.id}')" class="p-2 rounded-xl text-slate-400 hover:text-emerald-600 hover:bg-slate-100 transition-colors">
+                                        <i data-lucide="bookmark" class="w-5 h-5 ${isBookmarked ? 'fill-emerald-600 text-emerald-600' : ''}"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="space-y-1">
+                                <h3 class="text-lg font-bold text-slate-900 group-hover:text-emerald-700 transition-colors">${sys.name}</h3>
+                                <p class="text-sm text-slate-500 line-clamp-2">${sys.tagline}</p>
+                            </div>
+                            <div class="pt-2 flex flex-wrap gap-1.5">
+                                ${sys.organs.slice(0, 3).map(org => `<span class="px-2 py-0.5 bg-slate-100 text-slate-600 text-xs rounded-md font-medium">${org.name.split(' ')[0]}</span>`).join('')}
+                                ${sys.organs.length > 3 ? `<span class="px-2 py-0.5 bg-slate-50 text-slate-400 text-xs rounded-md">+${sys.organs.length - 3} organ</span>` : ''}
+                            </div>
+                        </div>
+                        <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
+                            <span class="text-xs font-medium text-slate-500">${sys.organs.length} Komponen Utama</span>
+                            <button onclick="openSystemModal('${sys.id}')" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-semibold shadow-sm transition-colors flex items-center space-x-1.5">
+                                <span>Pelajari</span>
+                                <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            lucide.createIcons();
+        }
+
+        function renderGlossary(data) {
+            const container = document.getElementById('glossaryListContainer');
+            if (data.length === 0) {
+                container.innerHTML = `<p class="text-center text-slate-400 py-8 text-sm">Istilah medis tidak ditemukan.</p>`;
+                return;
+            }
+
+            container.innerHTML = data.map(item => `
+                <div class="p-4 bg-slate-50 border border-slate-200 rounded-2xl hover:border-emerald-400 transition-all space-y-1">
+                    <div class="flex items-center justify-between">
+                        <h4 class="font-bold text-slate-900 text-base">${item.term}</h4>
+                        <span class="px-2.5 py-0.5 bg-emerald-50 text-emerald-700 text-xs font-semibold rounded-full">${item.category}</span>
+                    </div>
+                    <p class="text-sm text-slate-600">${item.desc}</p>
+                </div>
+            `).join('');
+        }
+
+        function handleGlossarySearch(query) {
+            const q = query.toLowerCase().trim();
+            if (!q) {
+                renderGlossary(glossaryData);
+                return;
+            }
+            const filtered = glossaryData.filter(item => 
+                item.term.toLowerCase().includes(q) || 
+                item.desc.toLowerCase().includes(q) ||
+                item.category.toLowerCase().includes(q)
+            );
+            renderGlossary(filtered);
+        }
+
+        function handleSearch(query) {
+            const q = query.toLowerCase().trim();
+            if (!q) {
+                renderSystems(bodySystems);
+                return;
+            }
+            const filtered = bodySystems.filter(sys => 
+                sys.name.toLowerCase().includes(q) || 
+                sys.number.toLowerCase().includes(q) ||
+                sys.tagline.toLowerCase().includes(q) ||
+                sys.physiology.toLowerCase().includes(q) ||
+                sys.organs.some(o => o.name.toLowerCase().includes(q) || o.desc.toLowerCase().includes(q))
+            );
+            renderSystems(filtered);
+        }
+
+        function toggleBookmark(sysId) {
+            playSound('click');
+            if (bookmarks.includes(sysId)) {
+                bookmarks = bookmarks.filter(id => id !== sysId);
+            } else {
+                bookmarks.push(sysId);
+            }
+            localStorage.setItem('anatomiku_bookmarks_v2', JSON.stringify(bookmarks));
+            updateBookmarkBadge();
+            
+            if (!document.getElementById('tabExplore').classList.contains('hidden')) {
+                renderSystems(bodySystems);
+            } else if (!document.getElementById('tabBookmarks').classList.contains('hidden')) {
+                renderBookmarks();
+            }
+            if (currentActiveSystem === sysId) {
+                updateModalBookmarkBtn();
+            }
+        }
+
+        function toggleBookmarkCurrent() {
+            if (currentActiveSystem) {
+                toggleBookmark(currentActiveSystem);
+            }
+        }
+
+        function updateBookmarkBadge() {
+            document.getElementById('bookmarkCountBadge').textContent = bookmarks.length;
+        }
+
+        function renderBookmarks() {
+            const container = document.getElementById('bookmarksContainer');
+            const bookmarkedSystems = bodySystems.filter(s => bookmarks.includes(s.id));
+
+            if (bookmarkedSystems.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full py-16 text-center text-slate-400 space-y-3">
+                        <i data-lucide="bookmark-minus" class="w-12 h-12 mx-auto opacity-50"></i>
+                        <p class="text-base font-medium">Belum ada materi yang disimpan.</p>
+                        <button onclick="switchTab('explore')" class="px-4 py-2 bg-emerald-600 text-white rounded-xl text-sm font-semibold">Jelajahi Sistem Tubuh</button>
+                    </div>
+                `;
+                lucide.createIcons();
+                return;
+            }
+
+            container.innerHTML = bookmarkedSystems.map(sys => `
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col justify-between group">
+                    <div class="p-6 space-y-4">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-3">
+                                <span class="text-xs font-extrabold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-100">${sys.number}</span>
+                                <div class="w-10 h-10 rounded-xl bg-gradient-to-br ${sys.color} text-white flex items-center justify-center shadow-lg">
+                                    <i data-lucide="${sys.icon}" class="w-5 h-5"></i>
+                                </div>
+                            </div>
+                            <button onclick="event.stopPropagation(); toggleBookmark('${sys.id}')" class="p-2 rounded-xl text-emerald-600 bg-emerald-50 hover:bg-emerald-100 transition-colors">
+                                <i data-lucide="bookmark" class="w-5 h-5 fill-emerald-600"></i>
+                            </button>
+                        </div>
+                        <h3 class="text-xl font-bold text-slate-900">${sys.name}</h3>
+                        <p class="text-sm text-slate-500 line-clamp-2">${sys.tagline}</p>
+                    </div>
+                    <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
+                        <span class="text-xs font-medium text-slate-500">${sys.organs.length} Komponen</span>
+                        <button onclick="openSystemModal('${sys.id}')" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-semibold shadow-sm transition-colors">
+                            Buka Materi
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function openSystemModal(sysId) {
+            playSound('click');
+            currentActiveSystem = sysId;
+            const sys = bodySystems.find(s => s.id === sysId);
+            if (!sys) return;
+
+            const headerBg = document.getElementById('modalHeaderBg');
+            headerBg.className = `p-6 sm:p-8 text-white relative flex items-start justify-between bg-gradient-to-r ${sys.color}`;
+            document.getElementById('modalTitle').textContent = `${sys.number}. ${sys.name}`;
+            document.getElementById('modalSubtitle').textContent = sys.tagline;
+            document.getElementById('modalHeaderWatermark').setAttribute('data-lucide', sys.icon);
+            document.getElementById('modalFooterInfo').textContent = `Fisiologi Manusia - ${sys.name}`;
+
+            updateModalBookmarkBtn();
+            switchModalTab('overview');
+            document.getElementById('systemModal').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function closeModal() {
+            playSound('click');
+            document.getElementById('systemModal').classList.add('hidden');
+            currentActiveSystem = null;
+        }
+
+        function updateModalBookmarkBtn() {
+            const btn = document.getElementById('modalBookmarkBtn');
+            const isBookmarked = bookmarks.includes(currentActiveSystem);
+            btn.innerHTML = `<i data-lucide="bookmark" class="w-4 h-4 ${isBookmarked ? 'fill-white' : ''}"></i>`;
+            lucide.createIcons();
+        }
+
+        function switchModalTab(tabName) {
+            playSound('click');
+            currentModalTab = tabName;
+            const btnOv = document.getElementById('tabBtnOverview');
+            const btnVis = document.getElementById('tabBtnVisual');
+            const btnOrg = document.getElementById('tabBtnOrgans');
+            const btnQuiz = document.getElementById('tabBtnQuiz');
+
+            btnOv.className = "py-3.5 font-semibold text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center space-x-2 transition-colors whitespace-nowrap";
+            btnVis.className = "py-3.5 font-semibold text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center space-x-2 transition-colors whitespace-nowrap";
+            btnOrg.className = "py-3.5 font-semibold text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center space-x-2 transition-colors whitespace-nowrap";
+            btnQuiz.className = "py-3.5 font-semibold text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center space-x-2 transition-colors whitespace-nowrap";
+
+            const sys = bodySystems.find(s => s.id === currentActiveSystem);
+            if (!sys) return;
+
+            const contentContainer = document.getElementById('modalBodyContent');
+
+            if (tabName === 'overview') {
+                btnOv.className = "py-3.5 font-semibold text-sm border-b-2 border-emerald-600 text-emerald-700 flex items-center space-x-2 transition-colors whitespace-nowrap";
+                contentContainer.innerHTML = `
+                    <div class="space-y-6">
+                        <div class="bg-emerald-50 border border-emerald-100 rounded-2xl p-5 space-y-2">
+                            <div class="flex items-center space-x-2 text-emerald-800 font-bold text-sm">
+                                <i data-lucide="sparkles" class="w-4 h-4"></i>
+                                <span>Tahukah Kamu?</span>
+                            </div>
+                            <p class="text-slate-700 text-sm leading-relaxed">${sys.funFact}</p>
+                        </div>
+                        <div class="space-y-3">
+                            <h3 class="text-lg font-bold text-slate-900 flex items-center space-x-2">
+                                <i data-lucide="book-open" class="w-5 h-5 text-emerald-600"></i>
+                                <span>Fisiologi & Cara Kerja</span>
+                            </h3>
+                            <p class="text-slate-600 text-sm sm:text-base leading-relaxed bg-slate-50 p-5 rounded-2xl border border-slate-200">
+                                ${sys.physiology}
+                            </p>
+                        </div>
+                    </div>
+                `;
+            } else if (tabName === 'visual') {
+                btnVis.className = "py-3.5 font-semibold text-sm border-b-2 border-emerald-600 text-emerald-700 flex items-center space-x-2 transition-colors whitespace-nowrap";
+                contentContainer.innerHTML = `
+                    <div class="space-y-6 text-center">
+                        <div class="p-8 bg-slate-900 rounded-3xl text-white relative overflow-hidden flex flex-col items-center justify-center min-h-[300px] shadow-inner space-y-6">
+                            <div class="absolute inset-0 opacity-10 bg-[radial-gradient(#10b981_1px,transparent_1px)] [background-size:16px_16px]"></div>
+                            
+                            <div class="relative z-10 my-2 w-full flex justify-center">
+                                ${getDetailedVisualAnimation(sys.visualType)}
+                            </div>
+                            
+                            <div class="relative z-10 space-y-2 max-w-lg mx-auto">
+                                <h4 class="text-base sm:text-lg font-bold text-amber-400">${sys.simTitle}</h4>
+                                <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">${sys.simDesc}</p>
+                            </div>
+
+                            <div class="relative z-10 pt-2 flex flex-wrap items-center justify-center gap-3">
+                                <button onclick="alert('Simulasi Fisiologi Organ Sedang Dijalankan...')" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold shadow-lg transition-all flex items-center space-x-2">
+                                    <i data-lucide="play" class="w-4 h-4"></i>
+                                    <span>Jalankan Simulasi Fisiologi Organ</span>
+                                </button>
+                                <a href="${sys.youtubeUrl}" target="_blank" rel="noopener noreferrer" class="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm font-semibold shadow-lg transition-all flex items-center space-x-2">
+                                    <i data-lucide="youtube" class="w-4 h-4"></i>
+                                    <span>Tonton YouTube</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else if (tabName === 'organs') {
+                btnOrg.className = "py-3.5 font-semibold text-sm border-b-2 border-emerald-600 text-emerald-700 flex items-center space-x-2 transition-colors whitespace-nowrap";
+                contentContainer.innerHTML = `
+                    <div class="space-y-4">
+                        <h3 class="text-lg font-bold text-slate-900">Komponen & Organ Utama</h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            ${sys.organs.map((org, index) => `
+                                <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2 hover:border-emerald-500 transition-all">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 font-bold text-xs flex items-center justify-center">
+                                            0${index + 1}
+                                        </div>
+                                        <h4 class="font-bold text-slate-900 text-sm">${org.name}</h4>
+                                    </div>
+                                    <p class="text-slate-600 text-xs sm:text-sm pl-11">${org.desc}</p>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            } else if (tabName === 'quiz') {
+                btnQuiz.className = "py-3.5 font-semibold text-sm border-b-2 border-emerald-600 text-emerald-700 flex items-center space-x-2 transition-colors whitespace-nowrap";
+                renderQuizContent(sys);
+            }
+            lucide.createIcons();
+        }
+
+        // Custom Detailed SVG / Animated Visuals for ALL 10 Systems
+        function getDetailedVisualAnimation(type) {
+            switch(type) {
+                case 'nervous':
+                    return `
+                        <div class="flex flex-col items-center space-y-3">
+                            <div class="flex items-center space-x-4">
+                                <div class="w-14 h-14 rounded-2xl bg-amber-500/20 border border-amber-400 flex items-center justify-center animate-pulse-slow">
+                                    <i data-lucide="cpu" class="w-7 h-7 text-amber-300"></i>
+                                </div>
+                                <div class="w-20 h-1.5 bg-gradient-to-r from-amber-400 to-orange-500 animate-pulse rounded-full"></div>
+                                <div class="w-14 h-14 rounded-2xl bg-orange-500/20 border border-orange-400 flex items-center justify-center animate-pulse-slow" style="animation-delay: 0.4s;">
+                                    <i data-lucide="zap" class="w-7 h-7 text-orange-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                case 'endocrine':
+                    return `
+                        <div class="relative flex flex-col items-center">
+                            <div class="w-24 h-24 rounded-full border-2 border-dashed border-pink-400 animate-rotate-slow absolute -top-4"></div>
+                            <div class="w-14 h-14 rounded-full bg-pink-500/30 border border-pink-300 flex items-center justify-center animate-pulse-slow relative z-10">
+                                <i data-lucide="activity" class="w-7 h-7 text-pink-200"></i>
+                            </div>
+                        </div>
+                    `;
+                case 'reproductive':
+                    return `
+                        <div class="flex flex-col items-center space-y-2">
+                            <div class="w-16 h-16 rounded-3xl bg-purple-500/30 border border-purple-400 flex items-center justify-center animate-pulse-slow">
+                                <i data-lucide="heart" class="w-8 h-8 text-purple-300"></i>
+                            </div>
+                        </div>
+                    `;
+                case 'musculoskeletal':
+                    return `
+                        <div class="flex flex-col items-center space-y-2">
+                            <div class="flex items-center space-x-2">
+                                <div class="w-16 h-5 bg-slate-500 rounded-full animate-wave"></div>
+                                <div class="w-5 h-16 bg-slate-400 rounded-full animate-wave" style="animation-delay: 0.3s;"></div>
+                            </div>
+                        </div>
+                    `;
+                case 'respiratory':
+                    return `
+                        <div class="flex flex-col items-center space-y-3">
+                            <div class="flex items-center space-x-4">
+                                <div class="w-12 h-16 rounded-2xl bg-cyan-500/30 border border-cyan-400 animate-pulse-slow flex items-center justify-center">
+                                    <span class="text-[10px] text-cyan-200 font-bold">O2</span>
+                                </div>
+                                <div class="w-8 h-1 bg-cyan-300 animate-pulse"></div>
+                                <div class="w-12 h-16 rounded-2xl bg-blue-500/30 border border-blue-400 animate-pulse-slow flex items-center justify-center" style="animation-delay: 0.4s;">
+                                    <span class="text-[10px] text-blue-200 font-bold">CO2</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                case 'cardiovascular':
+                    return `
+                        <div class="flex flex-col items-center space-y-2">
+                            <div class="w-16 h-16 rounded-full bg-rose-500/30 border border-rose-400 flex items-center justify-center animate-pulse-slow">
+                                <i data-lucide="heart" class="w-8 h-8 text-rose-300"></i>
+                            </div>
+                        </div>
+                    `;
+                case 'digestive':
+                    return `
+                        <div class="flex flex-col items-center space-y-2">
+                            <div class="w-16 h-16 rounded-2xl bg-emerald-500/30 border border-emerald-400 flex items-center justify-center animate-wave">
+                                <i data-lucide="utensils" class="w-8 h-8 text-emerald-300"></i>
+                            </div>
+                        </div>
+                    `;
+                case 'urinary':
+                    return `
+                        <div class="flex flex-col items-center space-y-3">
+                            <div class="flex items-center space-x-4">
+                                <div class="w-10 h-16 rounded-xl bg-blue-500/30 border border-blue-400 animate-pulse-slow flex items-center justify-center">
+                                    <i data-lucide="droplet" class="w-5 h-5 text-blue-300"></i>
+                                </div>
+                                <div class="w-10 h-16 rounded-xl bg-indigo-500/30 border border-indigo-400 animate-pulse-slow flex items-center justify-center" style="animation-delay: 0.4s;">
+                                    <i data-lucide="droplet" class="w-5 h-5 text-indigo-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                case 'integumentary':
+                    return `
+                        <div class="flex flex-col items-center space-y-2">
+                            <div class="w-20 h-12 rounded-xl bg-amber-600/30 border border-amber-400 flex items-center justify-center animate-wave">
+                                <i data-lucide="shield" class="w-7 h-7 text-amber-300"></i>
+                            </div>
+                        </div>
+                    `;
+                case 'immune':
+                    return `
+                        <div class="flex flex-col items-center space-y-2">
+                            <div class="w-16 h-16 rounded-full bg-violet-600/30 border border-violet-400 flex items-center justify-center animate-pulse-slow">
+                                <i data-lucide="shield-check" class="w-8 h-8 text-violet-300"></i>
+                            </div>
+                        </div>
+                    `;
+                default:
+                    return `<i data-lucide="activity" class="w-10 h-10 text-emerald-400 animate-pulse"></i>`;
+            }
+        }
+
+        function renderQuizContent(sys) {
+            const container = document.getElementById('modalBodyContent');
+            const userScore = quizScores[sys.id];
+
+            if (userScore !== undefined) {
+                container.innerHTML = `
+                    <div class="py-8 text-center space-y-6 max-w-md mx-auto">
+                        <div class="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-inner">
+                            <i data-lucide="award" class="w-10 h-10"></i>
+                        </div>
+                        <div class="space-y-2">
+                            <h3 class="text-2xl font-bold text-slate-900">Kuis Telah Diselesaikan!</h3>
+                            <p class="text-sm text-slate-600">Anda telah berhasil menyelesaikan uji pemahaman untuk sistem ini dengan hasil:</p>
+                            <div class="inline-block px-4 py-2 bg-emerald-50 text-emerald-800 font-bold text-lg rounded-xl border border-emerald-200">
+                                ${userScore ? 'Benar (100 pts)' : 'Kurang Tepat (0 pts)'}
+                            </div>
+                        </div>
+                        <button onclick="resetQuiz('${sys.id}')" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-sm font-semibold transition-colors">
+                            Ulangi Kuis
+                        </button>
+                    </div>
+                `;
+            } else {
+                container.innerHTML = `
+                    <div class="space-y-6 max-w-2xl mx-auto">
+                        <div class="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-start space-x-3">
+                            <i data-lucide="help-circle" class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0"></i>
+                            <p class="text-sm text-amber-800 font-medium">Jawablah pertanyaan di bawah ini untuk menguji pemahaman Anda mengenai ${sys.name}.</p>
+                        </div>
+                        <div class="space-y-4">
+                            <h4 class="text-base sm:text-lg font-bold text-slate-900">${sys.quiz.question}</h4>
+                            <div class="space-y-2.5">
+                                ${sys.quiz.options.map((opt, idx) => `
+                                    <button onclick="submitQuizAnswer('${sys.id}',${idx})" class="w-full text-left p-4 bg-slate-50 hover:bg-emerald-50 hover:border-emerald-300 border border-slate-200 rounded-2xl text-sm font-medium text-slate-700 transition-all flex items-center justify-between group">
+                                        <span>${opt}</span>
+                                        <span class="w-6 h-6 rounded-full border border-slate-300 group-hover:border-emerald-500 flex items-center justify-center text-xs font-bold text-slate-400 group-hover:text-emerald-600">
+                                            ${String.fromCharCode(65 + idx)}
+                                        </span>
+                                    </button>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            lucide.createIcons();
+        }
+
+        function submitQuizAnswer(sysId, selectedIdx) {
+            const sys = bodySystems.find(s => s.id === sysId);
+            if (!sys) return;
+
+            const isCorrect = selectedIdx === sys.quiz.correct;
+            quizScores[sysId] = isCorrect;
+            localStorage.setItem('anatomiku_quizScores_v2', JSON.stringify(quizScores));
+
+            if (isCorrect) {
+                playSound('success');
+            } else {
+                playSound('error');
+            }
+
+            const container = document.getElementById('modalBodyContent');
+            container.innerHTML = `
+                <div class="py-6 text-center space-y-6 max-w-md mx-auto">
+                    <div class="w-16 h-16 ${isCorrect ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'} rounded-full flex items-center justify-center mx-auto shadow-inner">
+                        <i data-lucide="${isCorrect ? 'check' : 'x'}" class="w-8 h-8"></i>
+                    </div>
+                    <div class="space-y-2">
+                        <h3 class="text-2xl font-bold text-slate-900">${isCorrect ? 'Jawaban Benar!' : 'Kurang Tepat!'}</h3>
+                        <p class="text-sm text-slate-600">${sys.quiz.explanation}</p>
+                    </div>
+                    <button onclick="switchModalTab('quiz')" class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-semibold shadow-md transition-colors">
+                        Lanjutkan
+                    </button>
+                </div>
+            `;
+            lucide.createIcons();
+        }
+
+        function resetQuiz(sysId) {
+            playSound('click');
+            delete quizScores[sysId];
+            localStorage.setItem('anatomiku_quizScores_v2', JSON.stringify(quizScores));
+            const sys = bodySystems.find(s => s.id === sysId);
+            if (sys) renderQuizContent(sys);
+        }
+
+        function renderProgress() {
+            const completedCount = Object.keys(quizScores).length;
+            const percentage = Math.round((completedCount / bodySystems.length) * 100);
+
+            document.getElementById('overallScorePercent').textContent = `${percentage}%`;
+            document.getElementById('totalQuizCompleted').textContent = `${completedCount} dari 10 Sistem`;
+
+            const listContainer = document.getElementById('progressListContainer');
+            listContainer.innerHTML = bodySystems.map(sys => {
+                const status = quizScores[sys.id];
+                let statusBadge = `<span class="px-3 py-1 bg-slate-100 text-slate-500 text-xs font-semibold rounded-lg">Belum Dikerjakan</span>`;
+                if (status === true) {
+                    statusBadge = `<span class="px-3 py-1 bg-emerald-50 text-emerald-700 text-xs font-semibold rounded-lg flex items-center"><i data-lucide="check" class="w-3.5 h-3.5 mr-1"></i>Selesai (Benar)</span>`;
+                } else if (status === false) {
+                    statusBadge = `<span class="px-3 py-1 bg-rose-50 text-rose-700 text-xs font-semibold rounded-lg flex items-center"><i data-lucide="x" class="w-3.5 h-3.5 mr-1"></i>Selesai (Perlu Review)</span>`;
+                }
+
+                return `
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-slate-50 border border-slate-200 rounded-2xl gap-3">
+                        <div class="flex items-center space-x-3">
+                            <span class="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-100">${sys.number}</span>
+                            <div class="w-10 h-10 rounded-xl bg-gradient-to-br ${sys.color} text-white flex items-center justify-center shadow-md">
+                                <i data-lucide="${sys.icon}" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-slate-900 text-sm sm:text-base">${sys.name}</h4>
+                                <span class="text-xs text-slate-500">${sys.organs.length} Komponen Organ</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between sm:justify-end space-x-3">
+                            ${statusBadge}
+                            <button onclick="openSystemModal('${sys.id}')" class="px-3 py-1.5 bg-white border border-slate-200 hover:bg-emerald-50 text-slate-700 text-xs font-semibold rounded-lg shadow-sm transition-colors">
+                                Pelajari
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            lucide.createIcons();
+        }
+    </script>
+</body>
+</html>
